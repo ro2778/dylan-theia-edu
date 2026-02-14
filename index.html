@@ -109,56 +109,64 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
 });
 
-// Orientation toggle button
-let orientationLocked = false;
+// Orientation toggle — needs fullscreen to work on Android PWA
+let isLandscapeLocked = false;
 
 function toggleOrientation() {
-  const so = screen.orientation;
-  if (!so || !so.lock) return;
-
-  if (orientationLocked) {
-    // Unlock back to current physical orientation
-    so.unlock();
-    orientationLocked = false;
+  if (isLandscapeLocked) {
+    // Unlock: exit fullscreen, unlock orientation
+    isLandscapeLocked = false;
+    try { if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
+    if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     updateRotateBtn();
-  } else {
-    // Lock to the opposite orientation
-    const target = so.type.startsWith('portrait') ? 'landscape' : 'portrait';
-    so.lock(target).then(() => {
-      orientationLocked = true;
-      updateRotateBtn();
-    }).catch(() => {});
+    return;
   }
+
+  // Enter fullscreen first (required for orientation lock)
+  const el = document.documentElement;
+  const goFS = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (!goFS) return;
+
+  goFS.call(el).then(() => {
+    // Now try to lock to landscape
+    if (screen.orientation && screen.orientation.lock) {
+      return screen.orientation.lock('landscape');
+    }
+  }).then(() => {
+    isLandscapeLocked = true;
+    updateRotateBtn();
+  }).catch(() => {
+    // Fullscreen worked but lock failed, or fullscreen failed
+    // Still useful as fullscreen alone may help on tablets
+    isLandscapeLocked = false;
+    updateRotateBtn();
+  });
 }
 
 function updateRotateBtn() {
   const btn = document.getElementById('rotate-btn');
   if (!btn) return;
-  if (orientationLocked) {
-    btn.textContent = '🔓';
-    btn.title = 'Unlock rotation';
-  } else {
-    const isPortrait = window.innerHeight > window.innerWidth;
-    btn.textContent = isPortrait ? '📱↔️' : '📱↕️';
-    btn.title = 'Rotate screen';
-  }
+  btn.textContent = isLandscapeLocked ? '🔓' : '🔄';
+  btn.title = isLandscapeLocked ? 'Exit landscape' : 'Go landscape';
 }
 
-// Show rotate button only if API is available
+// Always show the rotate button (fullscreen is widely supported)
 window.addEventListener('load', () => {
-  if (screen.orientation && screen.orientation.lock) {
+  const el = document.documentElement;
+  if (el.requestFullscreen || el.webkitRequestFullscreen) {
     document.getElementById('rotate-btn').style.display = '';
   }
 });
 
-// Update icon when orientation changes
-window.addEventListener('resize', updateRotateBtn);
-if (screen.orientation) {
-  screen.orientation.addEventListener('change', () => {
-    orientationLocked = false;
+// Reset state if user exits fullscreen via system gesture
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    isLandscapeLocked = false;
+    try { if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
     updateRotateBtn();
-  });
-}
+  }
+});
 </script>
 <script src="app-stories.js"></script>
 <script src="app-core.js"></script>
