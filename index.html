@@ -20,8 +20,9 @@
 <div class="pyramid-deco" id="pyramid-deco"></div>
 <div id="bubbles-box"></div>
 
-<!-- Parent toggle -->
+<!-- Parent toggle & rotate -->
 <div class="parent-toggle-area" id="parent-toggle-area">
+  <button class="rotate-btn" id="rotate-btn" style="display:none" onclick="toggleOrientation()">📱↔️</button>
   <div class="parent-badge on" id="parent-badge">👁️ Parent: ON</div>
   <div class="parent-hint" id="parent-hint">Hold to toggle</div>
 </div>
@@ -107,6 +108,57 @@ window.addEventListener('appinstalled', () => {
   document.getElementById('install-btn').style.display = 'none';
   deferredPrompt = null;
 });
+
+// Orientation toggle button
+let orientationLocked = false;
+
+function toggleOrientation() {
+  const so = screen.orientation;
+  if (!so || !so.lock) return;
+
+  if (orientationLocked) {
+    // Unlock back to current physical orientation
+    so.unlock();
+    orientationLocked = false;
+    updateRotateBtn();
+  } else {
+    // Lock to the opposite orientation
+    const target = so.type.startsWith('portrait') ? 'landscape' : 'portrait';
+    so.lock(target).then(() => {
+      orientationLocked = true;
+      updateRotateBtn();
+    }).catch(() => {});
+  }
+}
+
+function updateRotateBtn() {
+  const btn = document.getElementById('rotate-btn');
+  if (!btn) return;
+  if (orientationLocked) {
+    btn.textContent = '🔓';
+    btn.title = 'Unlock rotation';
+  } else {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    btn.textContent = isPortrait ? '📱↔️' : '📱↕️';
+    btn.title = 'Rotate screen';
+  }
+}
+
+// Show rotate button only if API is available
+window.addEventListener('load', () => {
+  if (screen.orientation && screen.orientation.lock) {
+    document.getElementById('rotate-btn').style.display = '';
+  }
+});
+
+// Update icon when orientation changes
+window.addEventListener('resize', updateRotateBtn);
+if (screen.orientation) {
+  screen.orientation.addEventListener('change', () => {
+    orientationLocked = false;
+    updateRotateBtn();
+  });
+}
 </script>
 <script src="app-stories.js"></script>
 <script src="app-core.js"></script>
