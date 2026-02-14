@@ -15,14 +15,15 @@
 </head>
 <body>
 
+<div id="app-wrapper">
+
 <div class="bg-layer bg-desert active" id="bg-desert"></div>
 <div class="bg-layer bg-ocean" id="bg-ocean"></div>
 <div class="pyramid-deco" id="pyramid-deco"></div>
 <div id="bubbles-box"></div>
 
-<!-- Parent toggle & rotate -->
+<!-- Parent toggle (inside wrapper so it rotates too) -->
 <div class="parent-toggle-area" id="parent-toggle-area">
-  <button class="rotate-btn" id="rotate-btn" style="display:none" onclick="toggleOrientation()">📱↔️</button>
   <div class="parent-badge on" id="parent-badge">👁️ Parent: ON</div>
   <div class="parent-hint" id="parent-hint">Hold to toggle</div>
 </div>
@@ -88,6 +89,11 @@
   </div>
 </div>
 
+</div><!-- /app-wrapper -->
+
+<!-- Rotate button lives OUTSIDE wrapper so it stays in place -->
+<button class="rotate-btn" id="rotate-btn" style="display:none" onclick="toggleOrientation()">↔️</button>
+
 <script>
 // PWA Install prompt
 let deferredPrompt = null;
@@ -109,63 +115,55 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
 });
 
-// Orientation toggle — needs fullscreen to work on Android PWA
-let isLandscapeLocked = false;
+// Landscape mode via CSS rotation — works regardless of OS/API restrictions
+let fakeLandscape = false;
 
 function toggleOrientation() {
-  if (isLandscapeLocked) {
-    // Unlock: exit fullscreen, unlock orientation
-    isLandscapeLocked = false;
-    try { if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
-    if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-    updateRotateBtn();
-    return;
+  fakeLandscape = !fakeLandscape;
+  applyOrientation();
+  updateRotateBtn();
+}
+
+function applyOrientation() {
+  const wrapper = document.getElementById('app-wrapper');
+  if (fakeLandscape) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    wrapper.style.transform = 'rotate(90deg)';
+    wrapper.style.transformOrigin = 'top left';
+    wrapper.style.width = h + 'px';
+    wrapper.style.height = w + 'px';
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = w + 'px';
+    wrapper.style.overflow = 'auto';
+  } else {
+    wrapper.style.transform = '';
+    wrapper.style.transformOrigin = '';
+    wrapper.style.width = '';
+    wrapper.style.height = '';
+    wrapper.style.position = '';
+    wrapper.style.top = '';
+    wrapper.style.left = '';
+    wrapper.style.overflow = '';
   }
-
-  // Enter fullscreen first (required for orientation lock)
-  const el = document.documentElement;
-  const goFS = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-  if (!goFS) return;
-
-  goFS.call(el).then(() => {
-    // Now try to lock to landscape
-    if (screen.orientation && screen.orientation.lock) {
-      return screen.orientation.lock('landscape');
-    }
-  }).then(() => {
-    isLandscapeLocked = true;
-    updateRotateBtn();
-  }).catch(() => {
-    // Fullscreen worked but lock failed, or fullscreen failed
-    // Still useful as fullscreen alone may help on tablets
-    isLandscapeLocked = false;
-    updateRotateBtn();
-  });
 }
 
 function updateRotateBtn() {
   const btn = document.getElementById('rotate-btn');
   if (!btn) return;
-  btn.textContent = isLandscapeLocked ? '🔓' : '🔄';
-  btn.title = isLandscapeLocked ? 'Exit landscape' : 'Go landscape';
+  btn.textContent = fakeLandscape ? '↕️' : '↔️';
+  btn.title = fakeLandscape ? 'Back to portrait' : 'Go landscape';
 }
 
-// Always show the rotate button (fullscreen is widely supported)
-window.addEventListener('load', () => {
-  const el = document.documentElement;
-  if (el.requestFullscreen || el.webkitRequestFullscreen) {
-    document.getElementById('rotate-btn').style.display = '';
-  }
+// Reapply on resize (e.g. keyboard open/close)
+window.addEventListener('resize', () => {
+  if (fakeLandscape) applyOrientation();
 });
 
-// Reset state if user exits fullscreen via system gesture
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) {
-    isLandscapeLocked = false;
-    try { if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
-    updateRotateBtn();
-  }
+// Always show the button
+window.addEventListener('load', () => {
+  document.getElementById('rotate-btn').style.display = '';
 });
 </script>
 <script src="app-stories.js"></script>

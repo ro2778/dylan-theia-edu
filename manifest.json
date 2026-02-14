@@ -8,6 +8,7 @@
   "display": "standalone",
   "background_color": "#1a0a2e",
   "theme_color": "#1a0a2e",
+  "orientation": "any",
   "categories": ["education", "kids"],
   "icons": [
     {

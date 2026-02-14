@@ -17,7 +17,7 @@ html, body {
 body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* ===== BACKGROUNDS ===== */
-.bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; transition: opacity 0.8s; opacity: 0; }
+.bg-layer { position: absolute; inset: 0; z-index: 0; pointer-events: none; transition: opacity 0.8s; opacity: 0; }
 .bg-layer.active { opacity: 1; }
 
 .bg-desert { background: radial-gradient(ellipse at 50% 0%, #1e1145 0%, #1a0a2e 50%, #0f0520 100%); }
@@ -53,7 +53,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 @keyframes shimmer { 0% { opacity: 0.5; } 100% { opacity: 1; } }
 
 .pyramid-deco {
-  position: fixed; bottom: 16vh; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 16vh; left: 50%; transform: translateX(-50%);
   width: 0; height: 0;
   border-left: 70px solid transparent; border-right: 70px solid transparent;
   border-bottom: 90px solid rgba(196,165,90,0.3);
@@ -61,7 +61,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 
 .bubble {
-  position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
   background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
   border: 1px solid rgba(255,255,255,0.15);
   animation: rise linear infinite;
@@ -103,15 +103,24 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .child-age { font-size: 0.78rem; opacity: 0.7; font-weight: 400; }
 
 /* ===== PARENT TOGGLE ===== */
-.parent-toggle-area { position: fixed; top: 10px; right: 10px; z-index: 100; display: flex; align-items: center; gap: 6px; }
+.parent-toggle-area { position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; align-items: center; gap: 6px; }
 .rotate-btn {
-  width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);
-  font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  position: fixed; bottom: 12px; right: 12px; z-index: 9999;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(30,10,60,0.85); backdrop-filter: blur(4px);
+  font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
-  padding: 0; line-height: 1;
+  padding: 0; line-height: 1; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-.rotate-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+.rotate-btn:active { transform: scale(0.9); background: rgba(30,10,60,0.95); }
+
+/* App wrapper for CSS rotation */
+#app-wrapper {
+  display: flex; flex-direction: column; min-height: 100dvh;
+  width: 100%; position: relative;
+}
 .parent-badge {
   padding: 5px 11px; border-radius: 16px; font-size: 0.72rem; font-weight: 600;
   background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5);
