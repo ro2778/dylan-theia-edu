@@ -30,10 +30,13 @@ function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function clamp(n,lo,hi){return Math.max(lo,Math.min(hi,n))}
 function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
 function uOpts(correct,lo,hi,count){
-  const s=new Set([correct]);let t=0;
-  while(s.size<count&&t<50){s.add(clamp(correct+rint(-3,3),lo,hi));t++}
-  while(s.size<count)s.add(clamp(correct+s.size,lo,hi));
-  return shuffle([...s]);
+  const s=new Set([correct]);
+  // Try nearby values first
+  for(let d=1;s.size<count&&d<=hi-lo;d++){
+    if(correct+d<=hi)s.add(correct+d);
+    if(s.size<count&&correct-d>=lo)s.add(correct-d);
+  }
+  return shuffle([...s]).slice(0,count);
 }
 
 // ============ PARENT MODE TOGGLE ============

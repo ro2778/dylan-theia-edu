@@ -49,7 +49,9 @@ function renderMC(container,task){
 }
 
 function checkAnswer(btn,selected,correct){
+  if(btn.closest('.answer-options,.answer-single-row').dataset.answered)return;
   if(String(selected)===String(correct)){
+    btn.closest('.answer-options,.answer-single-row').dataset.answered='1';
     btn.classList.add('correct'); celebrate();
     setTimeout(()=>taskComplete('Great job! ⭐'),900);
   } else {
@@ -197,7 +199,10 @@ function raceAnswer(btn,who,selected,correct){
     window._raceWon=true; btn.classList.add('correct'); celebrate();
     const name=who==='dylan'?'Dylan 🦁':'Theia 🦋';
     setTimeout(()=>taskComplete(`${name} got it first! ⚡`),900);
-  } else {btn.classList.add('wrong');setTimeout(()=>btn.classList.remove('wrong'),500)}
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(()=>btn.classList.remove('wrong'),500);
+  }
 }
 
 // ============ CANVAS SYSTEM ============

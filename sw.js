@@ -1,4 +1,4 @@
-const CACHE_NAME = 'egypt-adventure-v2';
+const CACHE_NAME = 'egypt-adventure-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const ASSETS = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
   'https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap'
 ];
 

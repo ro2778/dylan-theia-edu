@@ -7,10 +7,13 @@ function startCat(cat){
 
 function genTasks(child,cat){
   const dy=child==='dylan';
-  const m={maths:dy?dyMaths:thMaths, phonics:dy?dyPhonics:thPhonics, writing:dy?dyWriting:thWriting,
+  const m={
+    maths:dy?dyMaths:thMaths, phonics:dy?dyPhonics:thPhonics, writing:dy?dyWriting:thWriting,
     fun:dy?dyFun:thFun, ocean:dy?dyOcean:thOcean,
     'joint-draw':jointDraw,'joint-ocean':jointOcean,'joint-maths':jointMaths,'joint-write':jointWrite};
-  return (m[cat]||(()=>[]))();
+  const gen=m[cat];
+  if(!gen)return [];
+  return gen();
 }
 
 // ============ DYLAN MATHS (age 4) ============
@@ -138,7 +141,7 @@ function thOcean(){
     t.push({type:'mc',question:`Which creature is ${f.color}?`,
       options:shuffle([f.name,...others.map(o=>o.name)]),answer:f.name,fishCard:f})});
   // Spell a fish
-  const spFish=pick(FISH.filter(f=>f.name.length<=8));
+  const spFish=pick(FISH.filter(f=>f.name.length<=8&&!f.name.includes(' ')));
   const word=spFish.name.toLowerCase();
   const extras=shuffle('abcdefghijklmnopqrstuvwxyz'.split('').filter(l=>!word.includes(l))).slice(0,3);
   t.push({type:'word-build',question:`Spell the fish! ${spFish.emoji}`,targetWord:word,

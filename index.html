@@ -42,6 +42,7 @@
   <button class="child-btn together" onclick="selectChild('together')">
     <div class="child-avatar">🦁🦋</div><div>Play Together!</div><div class="child-age">Joint challenges & races</div>
   </button>
+  <button class="install-btn" id="install-btn" style="display:none" onclick="installApp()">📲 Install App</button>
 </div>
 
 <!-- MENU -->
@@ -86,6 +87,27 @@
   </div>
 </div>
 
+<script>
+// PWA Install prompt
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = '';
+});
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((result) => {
+    deferredPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
 <script src="app-core.js"></script>
 <script src="app-tasks.js"></script>
 <script src="app-render.js"></script>

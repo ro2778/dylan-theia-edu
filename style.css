@@ -273,3 +273,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 @media (max-height: 600px) { .task-question{font-size:1rem} .canvas-container.sq{max-width:220px} #task-screen{padding-top:42px} }
 @media (min-width: 700px) { .split-container{flex-wrap:nowrap} }
+
+/* Install button */
+.install-btn {
+  padding: 10px 24px; border-radius: 14px; border: 2px solid var(--gold);
+  background: rgba(251,191,36,0.12); color: var(--gold);
+  font-family: 'Fredoka', sans-serif; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; margin-top: 4px;
+}
+.install-btn:active { transform: scale(0.95); background: rgba(251,191,36,0.25); }
