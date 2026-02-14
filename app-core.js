@@ -96,7 +96,8 @@ function selectChild(child){
       <button class="menu-card phonics" onclick="startCat('phonics')"><div class="menu-card-emoji">📖</div><div>Phonics</div></button>
       <button class="menu-card writing" onclick="startCat('writing')"><div class="menu-card-emoji">✏️</div><div>Writing</div></button>
       <button class="menu-card fun" onclick="startCat('fun')"><div class="menu-card-emoji">🎨</div><div>Drawing</div></button>
-      <button class="menu-card ocean" onclick="startCat('ocean')"><div class="menu-card-emoji">🐠</div><div>Ocean & Fish</div></button>`;
+      <button class="menu-card ocean" onclick="startCat('ocean')"><div class="menu-card-emoji">🐠</div><div>Ocean & Fish</div></button>
+      ${dy?'':`<button class="menu-card reading" onclick="startCat('reading')"><div class="menu-card-emoji">📚</div><div>Reading</div></button>`}`;
   }
   showScreen('menu-screen');
 }

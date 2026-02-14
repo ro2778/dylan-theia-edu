@@ -1,7 +1,9 @@
 // ============ TASK GENERATION ROUTER ============
 function startCat(cat){
   currentCategory=cat; currentTaskIndex=0;
-  setTheme((cat==='ocean'||cat==='joint-ocean')?'ocean':'desert');
+  if(cat==='ocean'||cat==='joint-ocean') setTheme('ocean');
+  else if(cat==='reading') {} // theme set per-story
+  else setTheme('desert');
   tasks=genTasks(currentChild,cat); showTask();
 }
 
@@ -9,7 +11,7 @@ function genTasks(child,cat){
   const dy=child==='dylan';
   const m={
     maths:dy?dyMaths:thMaths, phonics:dy?dyPhonics:thPhonics, writing:dy?dyWriting:thWriting,
-    fun:dy?dyFun:thFun, ocean:dy?dyOcean:thOcean,
+    fun:dy?dyFun:thFun, ocean:dy?dyOcean:thOcean, reading:thReading,
     'joint-draw':jointDraw,'joint-ocean':jointOcean,'joint-maths':jointMaths,'joint-write':jointWrite};
   const gen=m[cat];
   if(!gen)return [];
@@ -31,12 +33,20 @@ function dyMaths(){
 // ============ THEIA MATHS (age 5) ============
 function thMaths(){
   const t=[];
-  for(let i=0;i<3;i++){const a=rint(1,5),b=rint(1,5),ans=a+b;
-    t.push({type:'mc',question:`${a} + ${b} = ? ➕`,options:uOpts(ans,2,12,4),answer:ans})}
-  for(let i=0;i<2;i++){const a=rint(4,10),b=rint(1,a-1),ans=a-b;
-    t.push({type:'mc',question:`${a} − ${b} = ? ➖`,options:uOpts(ans,0,10,4),answer:ans})}
-  const n=rint(5,10),e=pick(['🐠','🐙','🐢','⭐','💎']);
-  t.push({type:'mc',question:`Count the ${e}s!`,display:(e+' ').repeat(n).trim(),displayType:'counting',options:uOpts(n,3,12,4),answer:n});
+  // Addition up to 20
+  for(let i=0;i<2;i++){const a=rint(3,12),b=rint(2,8),ans=a+b;
+    t.push({type:'mc',question:`${a} + ${b} = ? ➕`,options:uOpts(ans,2,20,4),answer:ans})}
+  // Subtraction up to 20
+  for(let i=0;i<2;i++){const a=rint(8,20),b=rint(2,a-1),ans=a-b;
+    t.push({type:'mc',question:`${a} − ${b} = ? ➖`,options:uOpts(ans,0,18,4),answer:ans})}
+  // Times tables: 1x, 5x, 10x
+  const tables=[1,5,10];
+  for(let i=0;i<2;i++){
+    const mul=pick(tables), num=rint(1,10), ans=mul*num;
+    t.push({type:'mc',question:`${num} × ${mul} = ? ✖️`,options:uOpts(ans,0,100,4),answer:ans})}
+  // Counting higher
+  const n=rint(7,15),e=pick(['🐠','🐙','🐢','⭐','💎']);
+  t.push({type:'mc',question:`Count the ${e}s!`,display:(e+' ').repeat(n).trim(),displayType:'counting',options:uOpts(n,5,18,4),answer:n});
   return shuffle(t);
 }
 
@@ -183,4 +193,14 @@ function jointWrite(){
     'Write your name!','Write the word CAT 🐱','Write the number 7',
     'Draw the letter A','Write the word SUN ☀️','Write the word FISH 🐟',
   ]).slice(0,4).map(p=>({type:'joint-draw',question:p,instruction:'Who can write it best?'}));
+}
+
+// ============ THEIA READING ============
+function thReading(){
+  // Pick 2 random stories and turn each into a story task
+  const chosen = shuffle(STORIES).slice(0,2);
+  return chosen.map(story=>({
+    type:'story',
+    story: story
+  }));
 }

@@ -11,6 +11,7 @@ function showTask(){
     maths:{color:'#7c3aed',label:'🔢 Maths'},phonics:{color:'#059669',label:'📖 Phonics'},
     writing:{color:'#d97706',label:'✏️ Writing'},fun:{color:'#dc2626',label:'🎨 Drawing'},
     ocean:{color:'#0369a1',label:'🐠 Ocean'},
+    reading:{color:'#7e22ce',label:'📚 Reading'},
     'joint-draw':{color:'#dc2626',label:'🎨 Together'},'joint-ocean':{color:'#0369a1',label:'🐠 Together'},
     'joint-maths':{color:'#7c3aed',label:'🔢 Race!'},'joint-write':{color:'#d97706',label:'✏️ Together'}};
   const meta=catMeta[currentCategory]||{color:'#666',label:'✨'};
@@ -27,6 +28,7 @@ function showTask(){
     case 'word-build': renderWordBuild(container,task); break;
     case 'joint-draw': renderJointDraw(container,task); break;
     case 'joint-race-mc': renderJointRaceMC(container,task); break;
+    case 'story': renderStory(container,task); break;
   }
 }
 
@@ -41,13 +43,35 @@ function renderMC(container,task){
   h+=`<div class="task-question">${task.question.replace(/\n/g,'<br>')}</div>`;
   if(task.display&&task.displayType==='counting') h+=`<div class="counting-objects">${task.display}</div>`;
   const rc=task.displayType==='single-row'||task.options.length<=2?'answer-single-row':'answer-options';
-  h+=`<div class="${rc}">`;
-  task.options.forEach(opt=>{
-    h+=`<button class="answer-btn" onclick="checkAnswer(this,${JSON.stringify(opt)},${JSON.stringify(task.answer)})">${opt}</button>`});
+  h+=`<div class="${rc}" id="mc-answers">`;
+  task.options.forEach((opt,i)=>{
+    h+=`<button class="answer-btn" data-idx="${i}">${opt}</button>`});
   h+='</div>';
   container.innerHTML=h;
+  // Attach click handlers via JS (avoids emoji breaking inline onclick)
+  const answerContainer=document.getElementById('mc-answers');
+  answerContainer.querySelectorAll('.answer-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      checkMC(this,task.options,task.answer,answerContainer);
+    });
+  });
 }
 
+function checkMC(btn,options,correct,wrap){
+  if(wrap.dataset.answered)return;
+  const idx=parseInt(btn.dataset.idx);
+  const selected=options[idx];
+  if(String(selected)===String(correct)){
+    wrap.dataset.answered='1';
+    btn.classList.add('correct'); celebrate();
+    setTimeout(()=>taskComplete('Great job! ⭐'),900);
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(()=>btn.classList.remove('wrong'),500);
+  }
+}
+
+// Keep old checkAnswer for race mode compatibility
 function checkAnswer(btn,selected,correct){
   if(btn.closest('.answer-options,.answer-single-row').dataset.answered)return;
   if(String(selected)===String(correct)){
@@ -179,30 +203,118 @@ function renderJointRaceMC(container,task){
     <div class="split-container">
       <div class="split-panel dylan">
         <div class="split-header">🦁 Dylan</div>
-        <div class="answer-options" style="max-width:170px">
-          ${task.options.map(o=>`<button class="answer-btn" onclick="raceAnswer(this,'dylan',${JSON.stringify(o)},${JSON.stringify(task.answer)})">${o}</button>`).join('')}
+        <div class="answer-options" style="max-width:170px" id="race-dylan">
+          ${task.options.map((o,i)=>`<button class="answer-btn" data-idx="${i}">${o}</button>`).join('')}
         </div>
       </div>
       <div class="split-panel theia">
         <div class="split-header">🦋 Theia</div>
-        <div class="answer-options" style="max-width:170px">
-          ${task.options.map(o=>`<button class="answer-btn" onclick="raceAnswer(this,'theia',${JSON.stringify(o)},${JSON.stringify(task.answer)})">${o}</button>`).join('')}
+        <div class="answer-options" style="max-width:170px" id="race-theia">
+          ${task.options.map((o,i)=>`<button class="answer-btn" data-idx="${i}">${o}</button>`).join('')}
         </div>
       </div>
     </div>`;
   window._raceWon=false;
+  ['dylan','theia'].forEach(who=>{
+    document.getElementById(`race-${who}`).querySelectorAll('.answer-btn').forEach(btn=>{
+      btn.addEventListener('click',function(){
+        if(window._raceWon)return;
+        const idx=parseInt(this.dataset.idx);
+        const selected=task.options[idx];
+        if(String(selected)===String(task.answer)){
+          window._raceWon=true; this.classList.add('correct'); celebrate();
+          const name=who==='dylan'?'Dylan 🦁':'Theia 🦋';
+          setTimeout(()=>taskComplete(`${name} got it first! ⚡`),900);
+        } else {
+          this.classList.add('wrong');
+          setTimeout(()=>this.classList.remove('wrong'),500);
+        }
+      });
+    });
+  });
 }
 
-function raceAnswer(btn,who,selected,correct){
-  if(window._raceWon)return;
-  if(String(selected)===String(correct)){
-    window._raceWon=true; btn.classList.add('correct'); celebrate();
-    const name=who==='dylan'?'Dylan 🦁':'Theia 🦋';
-    setTimeout(()=>taskComplete(`${name} got it first! ⚡`),900);
-  } else {
-    btn.classList.add('wrong');
-    setTimeout(()=>btn.classList.remove('wrong'),500);
+// ============ RENDER: STORY ============
+function renderStory(container,task){
+  const story=task.story;
+  // Set theme based on story
+  setTheme(story.theme==='ocean'?'ocean':'desert');
+
+  window._storyState={story,pageIndex:0};
+  renderStoryPage();
+}
+
+function renderStoryPage(){
+  const st=window._storyState;
+  if(!st)return;
+  const story=st.story;
+  const page=story.pages[st.pageIndex];
+  const isFirst=st.pageIndex===0;
+  const isLast=st.pageIndex===story.pages.length-1;
+  const pageNum=st.pageIndex+1;
+  const totalPages=story.pages.length;
+
+  // Build the highlighted text — hard words get a dotted underline
+  const hardSet=new Set((page.hard||[]).map(w=>w.toLowerCase()));
+  const textHTML=page.text.replace(/([a-zA-Z'']+)/g,(match)=>{
+    const lower=match.toLowerCase().replace(/['']/g,"'");
+    if(hardSet.has(lower)){
+      return `<span class="story-hard-word" title="Help me read this!">${match}</span>`;
+    }
+    return match;
+  });
+
+  let h=``;
+  if(isFirst){
+    h+=`<div class="story-cover-title">${story.emoji} ${story.title}</div>`;
   }
+  h+=`<div class="story-page-num">Page ${pageNum} of ${totalPages}</div>`;
+  h+=`<div class="story-illustration">${page.illustration}</div>`;
+  h+=`<div class="story-text">${textHTML}</div>`;
+  h+=`<div class="story-hint">
+    <span class="story-hint-dot"></span> Dotted words = ask a grown-up for help!
+  </div>`;
+  h+=`<div class="story-nav">`;
+  if(!isFirst){
+    h+=`<button class="back-btn" onclick="storyPrev()">← Back</button>`;
+  }
+  if(isLast){
+    h+=`<button class="next-btn" onclick="storyFinish()">Finish Story ⭐</button>`;
+  } else {
+    h+=`<button class="next-btn" onclick="storyNext()">Next Page ➜</button>`;
+  }
+  h+=`</div>`;
+
+  // Use container reference from task-content
+  const cont=document.getElementById('task-content');
+  cont.innerHTML=h;
+
+  // Scroll to top of task screen
+  document.getElementById('task-screen').scrollTop=0;
+}
+
+function storyNext(){
+  const st=window._storyState;
+  if(!st)return;
+  if(st.pageIndex<st.story.pages.length-1){
+    st.pageIndex++;
+    renderStoryPage();
+  }
+}
+
+function storyPrev(){
+  const st=window._storyState;
+  if(!st)return;
+  if(st.pageIndex>0){
+    st.pageIndex--;
+    renderStoryPage();
+  }
+}
+
+function storyFinish(){
+  celebrate();
+  const title=window._storyState?window._storyState.story.title:'the story';
+  setTimeout(()=>taskComplete(`You read "${title}"! Amazing! 📖⭐`),600);
 }
 
 // ============ CANVAS SYSTEM ============

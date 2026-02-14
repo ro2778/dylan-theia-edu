@@ -1,8 +1,9 @@
-const CACHE_NAME = 'egypt-adventure-v4';
+const CACHE_NAME = 'egypt-adventure-v6';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
+  './app-stories.js',
   './app-core.js',
   './app-tasks.js',
   './app-render.js',
